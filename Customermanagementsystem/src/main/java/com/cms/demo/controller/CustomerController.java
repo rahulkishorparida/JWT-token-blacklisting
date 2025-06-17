@@ -16,7 +16,10 @@ import com.cms.demo.config.ApiResponse;
 import com.cms.demo.dto.CustomerDto;
 import com.cms.demo.model.Customer;
 import com.cms.demo.service.CustomerService;
+import com.cms.demo.service.TokenBlacklistService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class CustomerController {
@@ -27,6 +30,8 @@ public class CustomerController {
     private CustomerService customerService;
     @Autowired
     private ObjectMapper mapper;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 //class convert java object to jshon
     
     @PostMapping("/customer")
@@ -196,5 +201,20 @@ public class CustomerController {
                     .body(new ApiResponse(false, "Customer not modified or not found"));
         }
     }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+//            System.out.println("Logging out token: " + token);
+            tokenBlacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Token blacklisted and user logged out.");
+        }
+
+        return ResponseEntity.badRequest().body("No token found.");
+    }
+    
+    
 
 }
