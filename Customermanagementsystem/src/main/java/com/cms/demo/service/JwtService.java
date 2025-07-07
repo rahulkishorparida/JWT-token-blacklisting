@@ -3,9 +3,12 @@ package com.cms.demo.service;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.cms.demo.model.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -13,7 +16,7 @@ import io.jsonwebtoken.Jwts;
 public interface JwtService {
 
 
-	public String generateToken(String username);
+	public Optional<String> generateToken(User user);
 
 	public Claims extractAllClaims(String token);
 	

@@ -1,6 +1,10 @@
 package com.cms.demo.model;
 
+import java.util.List;
+
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,9 +16,16 @@ public class User {
 	    private Integer id;
 		private String username;
 	    private String password;
+		@ElementCollection(fetch = FetchType.EAGER)
+	    private List<String> roles;
 	  
 
-
+	    public List<String> getRoles() {
+			return roles;
+		}
+		public void setRoles(List<String> roles) {
+			this.roles = roles;
+		}
 	 
 		public Integer getId() {
 			return id;

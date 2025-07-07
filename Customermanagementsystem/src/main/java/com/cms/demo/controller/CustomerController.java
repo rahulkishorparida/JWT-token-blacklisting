@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
+@RequestMapping("/data") 
 public class CustomerController {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomerController.class);
@@ -32,16 +33,16 @@ public class CustomerController {
     private ObjectMapper mapper;
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
-//class convert java object to jshon
+
     
     @PostMapping("/customer")
     public ResponseEntity<ApiResponse> saved(@RequestBody CustomerDto customerDto) {
     
         try {
-//            ObjectMapper mapper = new ObjectMapper(); // You can also inject it with @Autowired
-//            String json = mapper.writeValueAsString(customerDto);
+     
+            String json = mapper.writeValueAsString(customerDto);
         	
-            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(customerDto);
+            String writeValueAsString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(customerDto);
             logger.info("Request to save customer: {}", json);
 
             boolean saved = customerService.saveCustomer(customerDto);
@@ -113,7 +114,7 @@ public class CustomerController {
 //    }
     
     @GetMapping("/customer/{id}")
-    public ResponseEntity<ApiResponse<Customer>> findbyId(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<CustomerDto>> findbyId(@PathVariable Integer id) {
         logger.info("Request to find customer by id: {}", id);
         Optional<Customer> customerOpt = customerService.findbyId(id);
 
@@ -124,9 +125,10 @@ public class CustomerController {
         }
 
         Customer customer = customerOpt.get();
+        CustomerDto dto = customerService.convertToDto(customer);
+
         logger.info("Customer found: {}", customer);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Customer found", customer));
-//        return ResponseEntity.status(new ApiResponse(true, "Customer found", customer));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Customer found", dto));
     }
 
 //
@@ -146,13 +148,9 @@ public class CustomerController {
 //        return ResponseEntity.ok(new ApiResponse<>(true, "Customers fetched successfully", customers));
 //    }
     @GetMapping("/customers")
-    public ResponseEntity<ApiResponse<List<Customer>>> findAll() {
+    public ResponseEntity<ApiResponse<List<CustomerDto>>> findAll() {
         try {
             List<Customer> allCustomers = customerService.getdAllCustomer();
-
-            // Optional: Log the JSON of the list
-            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(allCustomers);
-            logger.info("Fetched customers: {}", json);
 
             if (allCustomers.isEmpty()) {
                 logger.warn("No customers found.");
@@ -160,9 +158,16 @@ public class CustomerController {
                         .body(new ApiResponse<>(false, "No customers found"));
             }
 
-//            return ResponseEntity.ok(new ApiResponse<>(true, "Customers found", allCustomers));
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new ApiResponse<>(true, "Customers found", allCustomers));
+            // Convert to DTOs with base64 image
+            List<CustomerDto> dtoList = allCustomers.stream()
+                    .map(customerService::convertToDto)
+                    .toList();
+
+
+            String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dtoList);
+            logger.info("Fetched customers DTOs: {}", json);
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Customers found", dtoList));
 
         } catch (Exception e) {
             logger.error("Error while fetching customers", e);
@@ -170,6 +175,7 @@ public class CustomerController {
                     .body(new ApiResponse<>(false, "Error fetching customers"));
         }
     }
+
 
 
 
@@ -187,20 +193,7 @@ public class CustomerController {
 //        }
 //    }
     
-    @PutMapping("/customer/{id}")
-    public ResponseEntity<ApiResponse> update(@PathVariable Integer id, @RequestBody CustomerDto customerDto) {
-        logger.info("Request to update customer with id: {} and data: {}", id, customerDto);
-        boolean updated = customerService.updateCustomer(id, customerDto);
 
-        if (updated) {
-            logger.info("Customer with id {} updated successfully", id);
-            return ResponseEntity.ok(new ApiResponse(true, "Customer updated successfully"));
-        } else {
-            logger.warn("Failed to update customer with id {}", id);
-            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
-                    .body(new ApiResponse(false, "Customer not modified or not found"));
-        }
-    }
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

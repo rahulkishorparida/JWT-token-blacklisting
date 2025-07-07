@@ -7,6 +7,6 @@ import com.cms.demo.model.Customer;
 
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 	
-	boolean existsByphone(long phone);
+	boolean existsByPhone(long phone);
 
 }

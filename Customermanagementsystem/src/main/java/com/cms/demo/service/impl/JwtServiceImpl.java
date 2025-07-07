@@ -5,15 +5,19 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.cms.demo.model.User;
+import com.cms.demo.repository.UserRepository;
 import com.cms.demo.service.JwtService;
 
 import io.jsonwebtoken.Claims;
@@ -28,33 +32,29 @@ public class JwtServiceImpl implements JwtService {
     private String secretKey;
 
     @Override
-    public String generateToken(String username) {
+    public Optional<String> generateToken(User user) {	
         Map<String, Object> claims = new HashMap<>();
-        //A key-value store for JWT claims
-        claims.put("username", username);
-        //“In the payload of the token, add a key called username, and set its value to the actual username.”
+        claims.put("roles", user.getRoles());
 
-        return Jwts.builder()
-          .setClaims(claims)
-          //	Tells JWT to use your custom payload
-                // all the custom claims (payload values) you defined above (username, etc.).
-                .setSubject(username)
-                //this is a standard JWT claim representing who the token is for 
+        String token = Jwts.builder()
+        		.setHeaderParam("typ", "JWT")
+                .setClaims(claims)
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 4))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 5))
-//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
                 .signWith(getKey())
                 .compact();
-        //Convert to String
+
+        return Optional.of(token);
     }
+
     private Key getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
      // creates a secure SecretKey object suitable for HMAC-SHA algorithms 
-     // creates a secret key from a byte array for signing a JWT using HMAC-SHA algorithms
+    // creates a secret key from a byte array for signing a JWT using HMAC-SHA algorithms 
     }
-    
+
     @Override
     public Claims extractAllClaims(String token) {
         Claims claims= Jwts.parserBuilder()
@@ -76,25 +76,12 @@ public class JwtServiceImpl implements JwtService {
 	
 	@Override
 	public <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-//Function<Claims, T> claimResolver: a functional interface (Java 8+) 
-//— a function that takes Claims as input and returns a T value.		
+   //Function<Claims, T> claimResolver: a functional interface (Java 8+) 
+   //— a function that takes Claims as input and returns a T value.		
 		Claims claims = extractAllClaims(token);
 		return claimResolver.apply(claims);
 	}
 	
-//	private Object decryptkey(String secretKey2) {
-//		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-//		return Keys.hmacShaKeyFor(keyBytes);
-//		
-//	}
-//	
-//	private Key getKeyFromSecret(String base64Secret) {
-//	    byte[] keyBytes = Decoders.BASE64.decode(base64Secret);
-//	    return Keys.hmacShaKeyFor(keyBytes);
-//	}
-//So, you don't need getKeyFromSecret(String base64Secret) because you already have a better version:
-//getKey() that internally reads from your configured @Value("${jwt.secret}").
-
 	@Override
 	public String extractUserName(String token) {
 	return	extractClaim(token, Claims::getSubject);

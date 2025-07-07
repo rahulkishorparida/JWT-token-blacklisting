@@ -39,27 +39,10 @@ public class TestController {
     		return new ResponseEntity<>("invalid",HttpStatus.BAD_REQUEST);
     	}
 		return new ResponseEntity<>(token, HttpStatus.OK);
-    	
     }
     
-//    @PostMapping("/logout")
-//    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-//        return ResponseEntity.ok("You have been logged out successfully.");
-//    }
-    
-//    @PostMapping("/logout")
-//    public ResponseEntity<?> logout(HttpServletRequest request) {
-//        String authHeader = request.getHeader("Authorization");
-//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-//            String token = authHeader.substring(7);
-//            tokenBlacklist.blacklistToken(token);
-//            return ResponseEntity.ok("You have been logged out. Token blacklisted.");
-//        }
-//        return ResponseEntity.badRequest().body("Token not found.");
-//    }
-
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<?> logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

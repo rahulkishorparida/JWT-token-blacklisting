@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,8 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.cms.demo.model.User;
 
 public class CustomUser implements UserDetails {
-	//when someone logs in, Spring Security needs user details
-	
+
 	private User user;
 
 	public CustomUser(User user) {
@@ -23,7 +23,11 @@ public class CustomUser implements UserDetails {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		 return Collections.emptyList();
+//		return Collections.emptyList();
+		
+		return user.getRoles().stream()
+				.map(SimpleGrantedAuthority::new)
+				.collect(Collectors.toList());
 	}
 
 	@Override

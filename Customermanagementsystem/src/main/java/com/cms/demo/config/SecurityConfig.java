@@ -1,5 +1,7 @@
 package com.cms.demo.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -48,24 +50,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-//            .csrf(csrf -> csrf.disable())
-//            .authorizeHttpRequests(request -> request
-//            .requestMatchers("login","register").permitAll()
-//            .anyRequest().authenticated())
-//            .httpBasic(Customizer.withDefaults()); 
-        
+       
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-//        .requestMatchers("/login","/register").permitAll()
         .requestMatchers("/api/auth/**").permitAll() 
+        .requestMatchers("/admin/**").hasRole("ADMIN")
+        .requestMatchers("/data/**").hasRole("USER")
+        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
         .anyRequest().authenticated())
+        
         .httpBasic(Customizer.withDefaults())
         
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         //Tells Spring Security not to use sessions
        // Server checks the token on every request 
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
+        return http.build(); 
     }
     @Bean
     public CommandLineRunner runner(UserRepository repo, PasswordEncoder encoder) {
@@ -74,6 +74,9 @@ public class SecurityConfig {
                 User u = new User();
                 u.setUsername("test");
                 u.setPassword(encoder.encode("test1234"));
+//                u.setRoles(List.of("ROLE_ADMIN")); 
+                u.setRoles(List.of("ROLE_USER", "ROLE_ADMIN"));
+
                 repo.save(u);
             }
         };

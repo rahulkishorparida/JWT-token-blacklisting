@@ -7,6 +7,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import com.cms.demo.dto.UserResponse;
+import com.cms.demo.model.User;
+import com.cms.demo.repository.UserRepository;
 import com.cms.demo.service.JwtService;
 import com.cms.demo.service.UserService;
 @Service
@@ -15,6 +17,8 @@ public class UserServiceImpl implements UserService {
 	private AuthenticationManager authenticationManager;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private UserRepository userRepository;
 	
     @Override
     public String login(UserResponse response) {
@@ -23,9 +27,13 @@ public class UserServiceImpl implements UserService {
         );
 
         if (authentication.isAuthenticated()) {
-//            return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-        	 return jwtService.generateToken(response.getUsername());
+            User user = userRepository.findByUsername(response.getUsername());
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            return jwtService.generateToken(user)
+                    .orElseThrow(() -> new RuntimeException("Token generation failed"));
         }
+        
         throw new RuntimeException("Authentication failed for user: " + response.getUsername());
     }
 

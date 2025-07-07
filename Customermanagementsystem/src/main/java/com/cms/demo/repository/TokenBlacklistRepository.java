@@ -7,6 +7,7 @@ import com.cms.demo.model.TokenBlacklist;
 import java.util.Optional;
 
 public interface TokenBlacklistRepository extends JpaRepository<TokenBlacklist, Long> {
+	
     boolean existsByToken(String token);
 }
 
